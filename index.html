@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Árbol AVL en Python</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='arbol.css') }}">
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Sidebar con controles -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+            <circle cx="20" cy="20" r="18" stroke="url(#gradient1)" stroke-width="2"/>
+            <circle cx="20" cy="20" r="6" fill="url(#gradient1)"/>
+            <line x1="20" y1="20" x2="10" y2="32" stroke="url(#gradient1)" stroke-width="2"/>
+            <line x1="20" y1="20" x2="30" y2="32" stroke="url(#gradient1)" stroke-width="2"/>
+            <defs>
+              <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#00f5ff"/>
+                <stop offset="100%" style="stop-color:#7b2ff7"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          <h1>AVL Tree (Python)</h1>
+        </div>
+      </div>
+
+      <div class="sidebar-content">
+        <div class="control-section">
+          <h3>Controles</h3>
+          <div class="input-group">
+            <label for="nodeValue">Valor del Nodo</label>
+            <input type="number" id="nodeValue" placeholder="Ingresa un número" />
+          </div>
+
+          <div class="button-group">
+            <button class="btn btn-primary" onclick="insertNode()">Insertar</button>
+            <button class="btn btn-danger" onclick="deleteNode()">Eliminar</button>
+            <button class="btn btn-warning" onclick="clearTree()">Limpiar</button>
+          </div>
+
+          <div class="info-section">
+            <h3>Información del Árbol</h3>
+            <div class="info-card">
+              <div class="info-item">
+                <span class="info-label">Nodos:</span>
+                <span class="info-value" id="nodeCount">0</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Altura:</span>
+                <span class="info-value" id="treeHeight">0</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Balanceado:</span>
+                <span class="info-value" id="isBalanced">Sí</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Contenido principal -->
+    <main class="main-content">
+      <div class="status-bar">
+        <div class="status-indicator">
+          <span class="status-dot"></span>
+          <span id="statusMessage">Listo para comenzar</span>
+        </div>
+      </div>
+
+      <div class="canvas-container">
+        <canvas id="canvas"></canvas>
+        <div class="grid-overlay"></div>
+      </div>
+
+      <div class="inorder-section">
+        <h3>Recorrido Inorden:</h3>
+        <p id="inorderOutput">[ ]</p>
+      </div>
+    </main>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <!-- Script que conecta con Flask (Python) -->
+  <script>
+    async function insertNode() {
+      const value = parseInt(document.getElementById('nodeValue').value);
+      if (isNaN(value)) return showToast("⚠️ Ingresa un número válido");
+
+      const res = await fetch('/insert', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ value })
+      });
+      const data = await res.json();
+      updateInfo(data);
+      showToast(`Nodo ${value} insertado`);
+    }
+
+    async function deleteNode() {
+      const value = parseInt(document.getElementById('nodeValue').value);
+      if (isNaN(value)) return showToast("⚠️ Ingresa un número válido");
+
+      const res = await fetch('/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ value })
+      });
+      const data = await res.json();
+      updateInfo(data);
+      showToast(`Nodo ${value} eliminado`);
+    }
+
+    async function clearTree() {
+      await fetch('/clear', { method: 'POST' });
+      document.getElementById("nodeCount").textContent = 0;
+      document.getElementById("treeHeight").textContent = 0;
+      document.getElementById("isBalanced").textContent = "Sí";
+      document.getElementById("inorderOutput").textContent = "[ ]";
+      showToast("Árbol limpiado");
+    }
+
+    function updateInfo(data) {
+      document.getElementById("nodeCount").textContent = data.count;
+      document.getElementById("treeHeight").textContent = data.height;
+      document.getElementById("isBalanced").textContent = data.balanced ? "Sí" : "No";
+      document.getElementById("inorderOutput").textContent = `[ ${data.inorder.join(', ')} ]`;
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById("toast");
+      toast.textContent = msg;
+      toast.className = "toast show";
+      setTimeout(() => toast.className = "toast", 2000);
+    }
+  </script>
+
+</body>
+</html>
